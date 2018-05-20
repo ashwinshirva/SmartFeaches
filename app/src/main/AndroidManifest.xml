@@ -32,7 +32,7 @@
         </activity>
 
         <service
-            android:name=".LockService"
+            android:name=".SmartClickService"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -41,7 +41,7 @@
         </service>
 
         <receiver
-            android:name=".ScreenReceiver"
+            android:name=".SmartClickReceiver"
             android:enabled="true"
             android:exported="true" />
 

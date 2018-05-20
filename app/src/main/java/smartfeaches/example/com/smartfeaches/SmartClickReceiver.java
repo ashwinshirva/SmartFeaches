@@ -11,7 +11,6 @@ import android.media.FaceDetector;
 import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
-import android.view.SurfaceHolder;
 import android.widget.Toast;
 
 import java.io.File;
@@ -21,55 +20,33 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static android.content.ContentValues.TAG;
 import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
-import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO;
 
-public class ScreenReceiver extends BroadcastReceiver {
-
-
-    //Camera variables
-    //a surface holder
-    private SurfaceHolder sHolder;
-    //a variable to control the camera
-    private Camera mCamera;
-    //the camera parameters
-    private Camera.Parameters parameters;
+public class SmartClickReceiver extends BroadcastReceiver {
     /**
      * Called when the activity is first created.
      */
-    public static boolean wasScreenOn = true;
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
         Log.e("LOB", "onReceive");
         if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
-
+            //NOT YET IMPLEMENTED
         } else if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
             try {
-                takePictureNoPreview(context);
+                noPreviewPictureCapture(context);
             } catch (IOException e) {
-
+                Log.d("IO Exception", "onReceive: " + e);
             } catch (InterruptedException e) {
-
+                Log.d("Interrupted Exception", "onReceive: " + e);
             }
-
-        } else if (intent.getAction().equals()) {
-
         }
     }
 
-   /* @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_POWER) {
-            // Do something here...
-            event.startTracking(); // Needed to track long presses
-            return true;
-        }
-        return new Activity().onKeyDown(keyCode, event);
-    }*/
-
-    public void takePictureNoPreview(final Context context) throws IOException, InterruptedException {
-        // open back facing camera by default
+    public void noPreviewPictureCapture(final Context context) throws IOException, InterruptedException {
+        // Opens back facing camera by default
+        // Initialize camera variable with FFC object
         final Camera myCamera = Camera.open(findFrontFacingCamera());
 
         if (myCamera != null) {
@@ -77,6 +54,8 @@ public class ScreenReceiver extends BroadcastReceiver {
                 SurfaceTexture surfaceTexture = new SurfaceTexture(10);
                 myCamera.setPreviewTexture(surfaceTexture);
                 myCamera.startPreview();
+
+                //Set camera parameters
                 Camera.Parameters parameters = myCamera.getParameters();
                 parameters.setRotation(270);
                 myCamera.setParameters(parameters);
@@ -84,30 +63,32 @@ public class ScreenReceiver extends BroadcastReceiver {
                 myCamera.takePicture(null, null, getJpegCallback(context, myCamera));
             } catch (Exception e) {
                 Toast.makeText(context, "Error taking the picture", Toast.LENGTH_SHORT).show();
+                Log.d("FFC CAPTURE FAILED", "noPreviewPictureCapture: " + e);
             }
-
         } else {
             Toast.makeText(context, "No Front Facing Camera!", Toast.LENGTH_LONG).show();
+            Log.d("FFC NOT FOUND", "noPreviewPictureCapture: FFC not found");
         }
     }
 
-
-    private Camera.PictureCallback getJpegCallback(final Context context, final Camera myCamera) {
+    private Camera.PictureCallback getJpegCallback(final Context context, final Camera camera) {
         Camera.PictureCallback mPicture = new Camera.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
-                File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-                if (pictureFile == null) {
+                File imageFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+                if (imageFile == null) {
                     return;
                 }
-
                 try {
-                    FileOutputStream fos = new FileOutputStream(pictureFile);
+                    //Save the image file
+                    FileOutputStream fos = new FileOutputStream(imageFile);
                     fos.write(data);
                     fos.close();
-                    myCamera.release();
 
-                    int faceCount = getFaceCount(pictureFile.getPath().toString());
+                    //Release camera object
+                    camera.release();
+
+                    int faceCount = getFaceCount(imageFile.getPath().toString());
                     if (faceCount > 0) {
                         String faceCountMessage = "Face count is: " + faceCount;
                         Toast.makeText(context, faceCountMessage, Toast.LENGTH_SHORT).show();
@@ -125,7 +106,6 @@ public class ScreenReceiver extends BroadcastReceiver {
 
     //Check if the device has a front facing camera
     private int findFrontFacingCamera() {
-
         int cameraId = 0;
         // Search for the front facing camera
         int numberOfCameras = Camera.getNumberOfCameras();
@@ -134,25 +114,14 @@ public class ScreenReceiver extends BroadcastReceiver {
             Camera.getCameraInfo(i, info);
             if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
                 cameraId = i;
-                //cameraFront = true;
                 break;
             }
         }
         return cameraId;
     }
-///////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Create a file Uri for saving an image or video
-     */
-    private static Uri getOutputMediaFileUri(int type) {
-        return Uri.fromFile(getOutputMediaFile(type));
-    }
 
 
-    /**
-     * Create a File for saving an image or video
-     */
+    //Create a File for saving an image or video
     public static File getOutputMediaFile(int type) {
         //Store the image in the internal storage
         File mediaStorageDir = new File(Environment.getExternalStorageDirectory(), "SmartFeaches");
@@ -180,23 +149,24 @@ public class ScreenReceiver extends BroadcastReceiver {
         return mediaFile;
     }
 
-    public int getFaceCount(String image_fn) {
+    //Count the no. of faces in the given image
+    public int getFaceCount(String ffcImage) {
         int face_count;
         FaceDetector.Face[] faces;
-        Bitmap background_image;
+        Bitmap ffcImageBitmap;
         final int MAX_FACES = 10;
         // Set internal configuration to RGB_565
-        BitmapFactory.Options bitmap_options = new BitmapFactory.Options();
-        bitmap_options.inPreferredConfig = Bitmap.Config.RGB_565;
+        BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+        bitmapOptions.inPreferredConfig = Bitmap.Config.RGB_565;
 
-        background_image = BitmapFactory.decodeFile(image_fn, bitmap_options);
+        ffcImageBitmap = BitmapFactory.decodeFile(ffcImage, bitmapOptions);
         FaceDetector face_detector = new FaceDetector(
-                background_image.getWidth(), background_image.getHeight(),
+                ffcImageBitmap.getWidth(), ffcImageBitmap.getHeight(),
                 MAX_FACES);
 
         faces = new FaceDetector.Face[MAX_FACES];
         // The bitmap must be in 565 format (for now).
-        face_count = face_detector.findFaces(background_image, faces);
+        face_count = face_detector.findFaces(ffcImageBitmap, faces);
         Log.d("Face_Detection", "Face Count: " + String.valueOf(face_count));
 
         return face_count;

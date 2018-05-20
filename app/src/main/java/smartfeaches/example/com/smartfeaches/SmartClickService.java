@@ -7,7 +7,7 @@ import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.IBinder;
 
-public class LockService extends Service {
+public class SmartClickService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -20,18 +20,14 @@ public class LockService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        final IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        final IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_ON);
         filter.addAction(Intent.ACTION_SCREEN_OFF);
-        filter.addAction(Intent.KEY);
-        //filter.addAction(Intent.ACTION_USER_PRESENT);
-        final BroadcastReceiver mReceiver = new ScreenReceiver();
-        registerReceiver(mReceiver, filter);
-        return super.onStartCommand(intent, flags, startId);
-    }
 
-    public class LocalBinder extends Binder {
-        LockService getService() {
-            return LockService.this;
-        }
+        //Create a broadcast receiver to detect screen on event
+        final BroadcastReceiver mReceiver = new SmartClickReceiver();
+        registerReceiver(mReceiver, filter);
+
+        return super.onStartCommand(intent, flags, startId);
     }
 }

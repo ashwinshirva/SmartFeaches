@@ -1,33 +1,19 @@
 package smartfeaches.example.com.smartfeaches;
 
-import android.content.Context;
 import android.content.Intent;
-import android.hardware.Camera;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-
 public class MainActivity extends AppCompatActivity {
-
-    private final static Logger log = Logger.getLogger(MainActivity.class.getName());
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,7 +30,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        startService(new Intent(getApplicationContext(), LockService.class));
+        //Start Smart Click service in background
+        startService(new Intent(getApplicationContext(), SmartClickService.class));
     }
 
     @Override
@@ -69,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
+    /*@Override
     public boolean dispatchKeyEvent(KeyEvent event) {
 
 
@@ -77,8 +64,8 @@ public class MainActivity extends AppCompatActivity {
 
 
             Toast.makeText(this, "down key pressed", Toast.LENGTH_LONG).show();
-            /*var intent = new Intent(this, typeof(EmergencySmsService));
-            StartService(intent);*/
+            *//*var intent = new Intent(this, typeof(EmergencySmsService));
+            StartService(intent);*//*
             Log.d("TAGs", "************Power button pressed*********************s");
 
             return true;
@@ -97,10 +84,5 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
         return super.onKeyDown(keyCode, event);
-    }
-
-
-
-
-
+    }*/
 }
